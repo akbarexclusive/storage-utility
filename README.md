@@ -1,4 +1,4 @@
-# STORAGE UTILITY 0.0.1 #
+# STORAGE UTILITY #
  
 Target - Front End Projects
 
@@ -7,13 +7,14 @@ Target - Front End Projects
 ### How do I get set up? ###
 
 * Run 'npm i storage-utility --save'
-* If using in React Native, setup environment by calling InitializeStorageUtils
+* If using in React Native, setup environment by calling InitializeStorageUtils at the root component's constructor
 ```
-	InitializeStorageUtils({
+    InitializeStorageUtils({
         storeName: 'Test', // default - 'STORAGE_UTILITY'
         engine: AsyncStorage, // default - localStorage
         STORAGE_ENGINE_NAME: 'AsyncStorage' // identifier, default - 'localStorage'
-    })
+    });
+
 ```
 
 ### Sample 
