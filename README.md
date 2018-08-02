@@ -12,7 +12,7 @@ Target - Front End Projects
     InitializeStorageUtils({
         storeName: 'Test', // default - 'STORAGE_UTILITY'
         engine: AsyncStorage, // default - localStorage
-        STORAGE_ENGINE_NAME: 'AsyncStorage' // identifier, default - 'localStorage'
+        engineName: 'AsyncStorage' // identifier, default - 'localStorage'
     });
 
 ```

@@ -29,7 +29,7 @@ export function InitializeStorageUtils({ engine, storeName, engineName }) {
     env = {
         STORE_NAME: storeName || 'STORAGE_UTILITY',
         STORAGE_ENGINE_NAME: engineName || 'localStorage',
-        ENGINE: engine || window ? window.localStorage : 1 && console.warn('Could not find Storage Engine. Cant use storage apis')
+        ENGINE: engine || ((window && window.localStorage) ? window.localStorage : 1 && console.warn('Could not find Storage Engine. Cant use storage apis'))
     }
     setDefault();
 }

@@ -1,6 +1,6 @@
 {
     "name": "storage-utility",
-    "version": "0.0.7",
+    "version": "0.0.9",
     "description": "Provides persistent utility support (Supported Engine - localStorage, asyncStorage)",
     "main": "build/index.js",
     "size-limit": [
@@ -21,10 +21,7 @@
         "type": "git",
         "url": "https://github.com/drivezy/storage-utility"
     },
-    "author": {
-        "name": "Shubham Kesarwani",
-        "email": "shubham.kesarwani89@gmail.com"
-    },
+    "author": "shubham.kesarwani89@gmail.com",
     "devDependencies": {
         "babel-cli": "^6.26.0",
         "babel-core": "^6.26.3",
@@ -41,6 +38,5 @@
         "localstorage",
         "asyncStorage"
     ],
-    "author": "shubham.kesarwani89@gmail.com",
     "license": "MIT"
 }
