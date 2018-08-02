@@ -40,17 +40,25 @@ async function setDefault() {
         case 'AsyncStorage':
             Promise.all([storageUtils({ method: 'getItem', key: 'volatile' }), storageUtils({ method: 'getItem', key: 'nonVolatile' })])
                 .then(res => {
+                    console.info('async resolved');
                     [vol, nonVol] = [res[0], res[1]];
+                    assingValuesToRespectiveStore(vol, nonVol);
                 });
             break;
 
         case 'localStorage':
             [vol, nonVol] = [localStorage.volatile, localStorage.nonVolatile];
+            assingValuesToRespectiveStore(vol, nonVol);
             break;
     }
+}
+
+function assingValuesToRespectiveStore(vol, nonVol) {
     try {
-        volatile = vol ? JSON.parse(vol) : {};
-        nonVolatile = nonVol ? JSON.parse(nonVol) : {};
+        vol = vol ? JSON.parse(vol) : {};
+        nonVol = nonVol ? JSON.parse(nonVol) : {};
+        volatile = { ...volatile, ...vol };
+        nonVolatile = { ...nonVolatile, ...nonVol };
     } catch (e) { console.error(e); }
 }
 
@@ -59,15 +67,16 @@ async function setDefault() {
  * @param  {string} key
  * @param  {any} payload 
  */
-export function SetItem(key, payload) {
+export function SetItem(key, payload, isNonVolatile = false) {
+    const store = isNonVolatile ? nonVolatile : volatile;
     if (IsUndefined(payload)) {
-        delete volatile[key];
+        delete store[key];
     }
     else {
-        volatile[key] = payload;
+        store[key] = payload;
     }
 
-    storageUtils({ method: 'setItem', key: 'volatile', payload: JSON.stringify(volatile) });
+    storageUtils({ method: 'setItem', key: isNonVolatile ? 'nonVolatile' : 'volatile', payload: JSON.stringify(store) });
 }
 
 /**
@@ -75,12 +84,12 @@ export function SetItem(key, payload) {
  * @param  {string} key 
  * @param  {boolean} nonVolatile - (optional)
  */
-export function GetItem(key, nonVolatile = false) {
+export function GetItem(key, isNonVolatile = false) {
     if (!key) {
         return null;
     }
 
-    if (nonVolatile) {
+    if (isNonVolatile) {
         return nonVolatile[key];
     }
     return volatile[key];
@@ -122,7 +131,7 @@ export function RemoveItem({ key, clearVolatileStorage = true, clearNonVolatileS
 function storageUtils({ method, key, payload }, shouldParse) {
     try {
         payload = shouldParse ? JSON.parse(payload) : payload;
-        env.ENGINE[method](resolveKey(key), payload);
+        return env.ENGINE[method](resolveKey(key), payload);
     } catch (e) {
         console.warn('Something went wrong with storage utils');
         console.error(e);
