@@ -1,6 +1,6 @@
 {
     "name": "storage-utility",
-    "version": "0.0.15",
+    "version": "0.0.16",
     "description": "Provides persistent utility support (Supported Engine - localStorage, asyncStorage)",
     "main": "build/index.js",
     "size-limit": [
@@ -28,6 +28,7 @@
         "babel-loader": "^7.1.5",
         "babel-plugin-transform-class-properties": "^6.24.1",
         "babel-plugin-transform-object-rest-spread": "^6.26.0",
+        "babel-plugin-transform-runtime": "^6.23.0",
         "babel-preset-env": "^1.7.0",
         "size-limit": "^0.18.5",
         "webpack": "^4.16.2",
