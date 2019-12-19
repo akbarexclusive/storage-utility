@@ -1,6 +1,6 @@
 {
     "name": "storage-utility",
-    "version": "0.0.25",
+    "version": "1.0.0",
     "description": "Provides persistent utility support (Supported Engine - localStorage, asyncStorage)",
     "main": "build/index.js",
     "size-limit": [
@@ -13,7 +13,7 @@
         "test": "echo \"Error: no test specified\" && exit 1",
         "start": "webpack-dev-server --mode development",
         "transpile": "babel src -d build --copy-files",
-        "prepublishOnly": "npm run transpile",
+        "prepublishOnly": "npm run build",
         "build": "webpack --mode production",
         "publish-demo": "npm run build && npm run deploy"
     },
