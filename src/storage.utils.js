@@ -12,9 +12,8 @@
  * })
  *******************************************************/
 
-let STORAGE_ENGINE_NAME;
+import { IndividualValidator } from './helper.utils';
 
-let AsyncStorage;
 let volatile = {};
 let nonVolatile = {};
 const ENGINES = ['AsyncStorage', 'localStorage']
@@ -24,7 +23,6 @@ let env = {
 }
 
 InitializeStorageUtils({});
-
 export function InitializeStorageUtils({ engine, storeName, engineName }) {
     env = {
         STORE_NAME: storeName || 'STORAGE_UTILITY',
@@ -67,15 +65,34 @@ function assingValuesToRespectiveStore(vol, nonVol) {
  * @param  {string} key
  * @param  {any} payload 
  */
-export function SetItem(key, payload, isNonVolatile = false) {
+export function SetItem(key, payload, { timestamp = new Date(), span, isNonVolatile = false } = {}) {
     const store = isNonVolatile ? nonVolatile : volatile;
     if (IsUndefined(payload)) {
         delete store[key];
     }
     else {
-        store[key] = payload;
+        const obj = { payload };
+        if (span) {
+            obj.timestamp = timestamp;
+            obj.span = span;
+        }
+        store[key] = obj;
     }
 
+    storageUtils({ method: 'setItem', key: isNonVolatile ? 'nonVolatile' : 'volatile', payload: JSON.stringify(store) });
+}
+
+/**
+ * Sets item in localStorage under 'volatile' keyword
+ * @param  {string} key
+ * @param  {any} payload 
+ */
+function overrideStorage(store, isNonVolatile = false) {
+    if (isNonVolatile) {
+        nonVolatile = store;
+    } else {
+        volatile = store;
+    }
     storageUtils({ method: 'setItem', key: isNonVolatile ? 'nonVolatile' : 'volatile', payload: JSON.stringify(store) });
 }
 
@@ -94,20 +111,6 @@ export function GetItem(key, isNonVolatile = false) {
     }
     return volatile[key];
 
-}
-
-/**
- * Same as SetItem, only difference is nonVolatile item is not wiped off even after logout
- * @param  {string} key
- * @param  {any} payload
- */
-export function SetNonVolatileItem(key, payload) {
-    if (IsUndefined(payload))
-        delete nonVolatile[key];
-    else
-        nonVolatile[key] = payload;
-
-    storageUtils({ method: 'setItem', key: 'nonVolatile', payload: JSON.stringify(nonVolatile) }, true);
 }
 
 /**
@@ -149,4 +152,20 @@ export function resolveKey(key) {
 function IsUndefined(value) {
     return typeof value == 'undefined';
     // return value === '';
+}
+
+function StorageValidator(object, isNonVolatile) {
+    const filteredStorage = {};
+    if (!object || typeof object !== 'object') {
+        return filteredStorage;
+    }
+
+    Object.keys(object).map(key => {
+        const { timestamp, span } = object[key] || {};
+
+        if (IndividualValidator({ timestamp, span })) {
+            filteredStorage[key] = object[key];
+        }
+    })
+    overrideStorage(filteredStorage, isNonVolatile);
 }

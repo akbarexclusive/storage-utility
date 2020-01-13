@@ -37,7 +37,6 @@ Target - Front End Projects
 * InitializeStorageUtils - setup env for package (can be skipped in case of web )
 * SetItem('key', 'value', nonVolatile = false) - Stores under volatile category, if nonVolatile is true, stores given value under nonvolatile category
 * GetItem('key', nonVolatile = false) - Stores under non volatile category i, if nonVolatile is true, seeks given key under nonvolatile category
-* SetNonVolatileItem('key', 'value') - Stores under nonvolatile category { deprecated, use SetItem with nonVolatile as true for same functionality }
 * RemoveItem({ clearVolatileStorage = true, clearNonVolatileStorage = false }) - Removes item from particular category. 
 
 
