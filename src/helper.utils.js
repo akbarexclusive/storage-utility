@@ -9,9 +9,9 @@ export function IndividualValidator({ timestamp, span }) {
         return true;
     }
 
-    const tillTime = AddTime(timestamp, span).getTime(); // @todo add time
+    const tillTime = AddTime(span, timestamp);
 
-    const currentTime = new Date().getTime;
+    const currentTime = new Date().getTime();
 
     if (currentTime > tillTime) {
         return false;
@@ -19,9 +19,24 @@ export function IndividualValidator({ timestamp, span }) {
     return true;
 }
 
-function AddTime(span, timestamp = new Date()) {
-    if (!span) {
-        return timestamp;
+function AddTime(span, time = new Date()) {
+    let timestamp = time;
+    if (typeof timestamp == 'number') {
+        timestamp = new Date(timestamp);
     }
-    return timestamp.getMinutes() + span;
+
+    if (!span || !isValidDate(timestamp)) {
+        return new Date().getTime();
+    }
+    timestamp.setMinutes(timestamp.getMinutes() + span);
+    return timestamp.getTime();
+}
+
+function isValidDate(d) {
+    return d instanceof Date && !isNaN(d);
+}
+
+export function IsUndefined(value) {
+    return typeof value == 'undefined';
+    // return value === '';
 }
