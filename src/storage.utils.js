@@ -12,9 +12,8 @@
  * })
  *******************************************************/
 
-let STORAGE_ENGINE_NAME;
+import { IndividualValidator, IsUndefined } from './helper.utils';
 
-let AsyncStorage;
 let volatile = {};
 let nonVolatile = {};
 const ENGINES = ['AsyncStorage', 'localStorage']
@@ -24,7 +23,6 @@ let env = {
 }
 
 InitializeStorageUtils({});
-
 export function InitializeStorageUtils({ engine, storeName, engineName }) {
     env = {
         STORE_NAME: storeName || 'STORAGE_UTILITY',
@@ -59,6 +57,9 @@ function assingValuesToRespectiveStore(vol, nonVol) {
         nonVol = nonVol ? JSON.parse(nonVol) : {};
         volatile = { ...volatile, ...vol };
         nonVolatile = { ...nonVolatile, ...nonVol };
+
+        StorageValidator(volatile); // validate volatile storage
+        StorageValidator(nonVolatile, true); // validate nonVolatile storage
     } catch (e) { console.error(e); }
 }
 
@@ -67,15 +68,34 @@ function assingValuesToRespectiveStore(vol, nonVol) {
  * @param  {string} key
  * @param  {any} payload 
  */
-export function SetItem(key, payload, isNonVolatile = false) {
+export function SetItem(key, payload, { timestamp = new Date().getTime(), span, isNonVolatile = false } = {}) {
     const store = isNonVolatile ? nonVolatile : volatile;
     if (IsUndefined(payload)) {
         delete store[key];
     }
     else {
-        store[key] = payload;
+        const obj = { payload };
+        if (span) {
+            obj.timestamp = timestamp;
+            obj.span = span;
+        }
+        store[key] = obj;
     }
 
+    storageUtils({ method: 'setItem', key: isNonVolatile ? 'nonVolatile' : 'volatile', payload: JSON.stringify(store) });
+}
+
+/**
+ * Sets item in localStorage under 'volatile' keyword
+ * @param  {string} key
+ * @param  {any} payload 
+ */
+function overrideStorage(store, isNonVolatile = false) {
+    if (isNonVolatile) {
+        nonVolatile = store;
+    } else {
+        volatile = store;
+    }
     storageUtils({ method: 'setItem', key: isNonVolatile ? 'nonVolatile' : 'volatile', payload: JSON.stringify(store) });
 }
 
@@ -89,25 +109,21 @@ export function GetItem(key, isNonVolatile = false) {
         return null;
     }
 
-    if (isNonVolatile) {
-        return nonVolatile[key];
+    let storageVal;
+    const store = isNonVolatile ? nonVolatile : volatile;
+    storageVal = store[key];
+
+    if (storageVal && typeof storageVal === 'object') {
+        const { timestamp, span, payload } = storageVal;
+        if (!span || IndividualValidator({ timestamp, span })) {
+            return payload;
+        } else {
+            delete store[key];
+            storageUtils({ method: 'setItem', key: isNonVolatile ? 'nonVolatile' : 'volatile', payload: JSON.stringify(store) });
+        }
     }
-    return volatile[key];
 
-}
-
-/**
- * Same as SetItem, only difference is nonVolatile item is not wiped off even after logout
- * @param  {string} key
- * @param  {any} payload
- */
-export function SetNonVolatileItem(key, payload) {
-    if (IsUndefined(payload))
-        delete nonVolatile[key];
-    else
-        nonVolatile[key] = payload;
-
-    storageUtils({ method: 'setItem', key: 'nonVolatile', payload: JSON.stringify(nonVolatile) }, true);
+    return null;
 }
 
 /**
@@ -138,7 +154,6 @@ function storageUtils({ method, key, payload }, shouldParse) {
     }
 }
 
-
 export function resolveKey(key) {
     if (IsUndefined(key)) {
         return key;
@@ -146,7 +161,31 @@ export function resolveKey(key) {
     return env.STORAGE_ENGINE_NAME == 'AsyncStorage' ? `${env.STORE_NAME}:${key}` : key;
 }
 
-function IsUndefined(value) {
-    return typeof value == 'undefined';
-    // return value === '';
+/**
+ * validates the storage having timestamp
+ * @param  {object} object - store object
+ * @param  {boolean} isNonVolatile
+ */
+function StorageValidator(object, isNonVolatile) {
+    // if value is not found in the storage, validation has become stale 
+    if (GetItem('STORAGE_VALIDATION')) {
+        return;
+    }
+
+    // setting up new storage validation timestamp 
+    SetItem('STORAGE_VALIDATION', new Date(), { span: 1 });
+
+    const filteredStorage = {};
+    if (!object || typeof object !== 'object') {
+        return filteredStorage;
+    }
+
+    Object.keys(object).map(key => {
+        const { timestamp, span } = object[key] || {};
+
+        if (IndividualValidator({ timestamp, span })) {
+            filteredStorage[key] = object[key];
+        }
+    })
+    overrideStorage(filteredStorage, isNonVolatile);
 }

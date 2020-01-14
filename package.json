@@ -1,6 +1,6 @@
 {
     "name": "storage-utility",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "description": "Provides persistent utility support (Supported Engine - localStorage, asyncStorage)",
     "main": "build/index.js",
     "size-limit": [
