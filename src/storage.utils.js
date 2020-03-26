@@ -22,32 +22,51 @@ let env = {
     STORE_NAME: '', STORAGE_ENGINE_NAME: ''
 }
 
+let promise;
+
 InitializeStorageUtils({});
 export function InitializeStorageUtils({ engine, storeName, engineName }) {
+    const engineMethod = engine || ((window && window.localStorage) ? window.localStorage : false)
+    if (!engineMethod) {
+        return;
+    }
     env = {
         STORE_NAME: storeName || 'STORAGE_UTILITY',
         STORAGE_ENGINE_NAME: engineName || 'localStorage',
-        ENGINE: engine || ((window && window.localStorage) ? window.localStorage : 1 && console.warn('Could not find Storage Engine. Cant use storage apis'))
+        ENGINE: engineMethod
+        // ENGINE: engine || ((window && window.localStorage) ? window.localStorage : 1 && console.warn('Could not find Storage Engine. Cant use storage apis'))
     }
     setDefault();
 }
+
+
 
 async function setDefault() {
     let vol, nonVol;
     switch (env.STORAGE_ENGINE_NAME) {
         case 'AsyncStorage':
-            Promise.all([storageUtils({ method: 'getItem', key: 'volatile' }), storageUtils({ method: 'getItem', key: 'nonVolatile' })])
-                .then(res => {
-                    console.info('async resolved');
-                    [vol, nonVol] = [res[0], res[1]];
-                    assingValuesToRespectiveStore(vol, nonVol);
-                });
-            break;
+            // this will prevent function from being executed multple times
+            // and return promise from here itself
+            if (promise) {
+                return promise;
+            }
+            promise = new Promise(resolve => {
+                Promise.all([storageUtils({ method: 'getItem', key: 'volatile' }), storageUtils({ method: 'getItem', key: 'nonVolatile' })])
+                    .then(res => {
+                        promise = null;
+                        // console.info('async resolved');
+                        [vol, nonVol] = [res[0], res[1]];
+                        assingValuesToRespectiveStore(vol, nonVol)
+                        return resolve('resolved');
+                    });
+            })
+            return promise;
+        // break;
 
         case 'localStorage':
             [vol, nonVol] = [localStorage.volatile, localStorage.nonVolatile];
-            assingValuesToRespectiveStore(vol, nonVol);
-            break;
+            return assingValuesToRespectiveStore(vol, nonVol);
+        // break;
     }
 }
 
@@ -58,8 +77,9 @@ function assingValuesToRespectiveStore(vol, nonVol) {
         volatile = { ...volatile, ...vol };
         nonVolatile = { ...nonVolatile, ...nonVol };
 
-        StorageValidator(volatile); // validate volatile storage
+        StorageValidator(volatile, false); // validate volatile storage
         StorageValidator(nonVolatile, true); // validate nonVolatile storage
+        return;
     } catch (e) { console.error(e); }
 }
 
@@ -68,12 +88,18 @@ function assingValuesToRespectiveStore(vol, nonVol) {
  * @param  {string} key
  * @param  {any} payload 
  */
-export function SetItem(key, payload, { timestamp = new Date().getTime(), span, isNonVolatile = false } = {}) {
+export async function SetItem(key, payload, { timestamp = new Date().getTime(), span, isNonVolatile = false } = {}) {
+
+    // there might be a usecase when SetItem is being called while setDefault is still in progress 
+    // and fetching values from the asynstorage
+    // promise is there, will wait for the function to be executed
+    if (promise) {
+        await setDefault();
+    }
     const store = isNonVolatile ? nonVolatile : volatile;
     if (IsUndefined(payload)) {
         delete store[key];
-    }
-    else {
+    } else {
         const obj = { payload };
         if (span) {
             obj.timestamp = timestamp;
@@ -81,7 +107,11 @@ export function SetItem(key, payload, { timestamp = new Date().getTime(), span, 
         }
         store[key] = obj;
     }
-
+    if (isNonVolatile) {
+        nonVolatile = store;
+    } else {
+        volatile = store;
+    }
     storageUtils({ method: 'setItem', key: isNonVolatile ? 'nonVolatile' : 'volatile', payload: JSON.stringify(store) });
 }
 
@@ -104,13 +134,20 @@ function overrideStorage(store, isNonVolatile = false) {
  * @param  {string} key 
  * @param  {boolean} nonVolatile - (optional)
  */
-export function GetItem(key, isNonVolatile = false) {
+export async function GetItem(key, isNonVolatile = false) {
     if (!key) {
         return null;
     }
 
+    // there might be a usecase when GetItem is being called while setDefault is still in progress 
+    // and fetching values from the asynstorage
+    // promise will wait for the function to be executed
+    if (promise) {
+        const result = await setDefault();
+    }
+
     let storageVal;
-    const store = isNonVolatile ? nonVolatile : volatile;
+    const store = (isNonVolatile ? nonVolatile : volatile) || {};
     storageVal = store[key];
 
     if (storageVal && typeof storageVal === 'object') {
@@ -122,7 +159,6 @@ export function GetItem(key, isNonVolatile = false) {
             storageUtils({ method: 'setItem', key: isNonVolatile ? 'nonVolatile' : 'volatile', payload: JSON.stringify(store) });
         }
     }
-
     return null;
 }
 
@@ -168,7 +204,8 @@ export function resolveKey(key) {
  */
 function StorageValidator(object, isNonVolatile) {
     // if value is not found in the storage, validation has become stale 
-    if (GetItem('STORAGE_VALIDATION')) {
+    // if (storageValidationValue) {
+    if (GetItem('STORAGE_VALIDATION', false)) {
         return;
     }
 
