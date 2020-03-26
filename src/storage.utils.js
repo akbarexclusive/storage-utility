@@ -54,7 +54,7 @@ async function setDefault() {
                 Promise.all([storageUtils({ method: 'getItem', key: 'volatile' }), storageUtils({ method: 'getItem', key: 'nonVolatile' })])
                     .then(res => {
                         promise = null;
-                        console.info('async resolved');
+                        // console.info('async resolved');
                         [vol, nonVol] = [res[0], res[1]];
                         assingValuesToRespectiveStore(vol, nonVol)
                         return resolve('resolved');
