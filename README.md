@@ -26,7 +26,9 @@ Target - Front End Projects
     export default class StorageTest {
         constructor(props) { 
             SetItem('testVar', {anything: 'any value'});
-            console.log(GetItem('testVar'));
+            GetItem('testVar').then(storagevalue => console.log(storagevalue));
+            // alternatively 
+            // await GetItem('testVar');
         }   
     }
 
@@ -36,7 +38,7 @@ Target - Front End Projects
 
 * InitializeStorageUtils - setup env for package (can be skipped in case of web )
 * SetItem('key', 'value', nonVolatile = false) - Stores under volatile category, if nonVolatile is true, stores given value under nonvolatile category
-* GetItem('key', nonVolatile = false) - Stores under non volatile category i, if nonVolatile is true, seeks given key under nonvolatile category
+* await GetItem('key', nonVolatile = false) - Returns value from the storage
 * RemoveItem({ clearVolatileStorage = true, clearNonVolatileStorage = false }) - Removes item from particular category. 
 
 
