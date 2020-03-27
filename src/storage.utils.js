@@ -24,7 +24,17 @@ let env = {
 
 let promise;
 
+// tries to initialize storage engine with default params, which prevents explicit calling the method for web usage where localstroage is attached to window 
 InitializeStorageUtils({});
+
+/**
+ * sets up environment for storage engine
+ * useful when using in react native (asyncStorage)
+ * @param  {object} {engine - AsyncStorage object in case of react native. 
+ * @param  {string} engineName} - name of engine is required to distinguish the platform and fetch data according
+ * // since asyncstorage works asynchronously, hence its important to send engineName, which bydefault is localStorage
+ * @param  {string} storeName{optional} - all the values would be stored under <storeName> keyword
+ */
 export function InitializeStorageUtils({ engine, storeName, engineName }) {
     const engineMethod = engine || ((window && window.localStorage) ? window.localStorage : false)
     if (!engineMethod) {
@@ -84,9 +94,18 @@ function assingValuesToRespectiveStore(vol, nonVol) {
 }
 
 /**
- * Sets item in localStorage under 'volatile' keyword
- * @param  {string} key
- * @param  {any} payload 
+ * Setter in storage engine
+ * Stores value against the keyword. 
+ * SetItem also takes span(in minutes), which is timeduration after which value against the key will become stale and flushedout
+ * it works as cookie which validates against the given time
+ * @param  {string} key - key value against which value is stored and being fetched by passing same key
+ * @param  {any} payload - payload is the data to be stored
+ *  {
+        * @param  {number} span() - span is the value in minutes which is the life duration of the data, once this time is passed, data is flushed out
+        * @param  {boolean} isNonVolatile=false}= - all data are broadly stored under two category, volatile and nonVolatile
+        * reason for doing so is that there might be a usecase when business wants to delete particular set of data after certain activity for e.g. after logout we would like to delete all the user related data from storage
+        * having this categorisation makes it easy to delete all the volatile data after some activity has happened
+ *  }
  */
 export async function SetItem(key, payload, { timestamp = new Date().getTime(), span, isNonVolatile = false } = {}) {
 
@@ -130,7 +149,7 @@ function overrideStorage(store, isNonVolatile = false) {
 }
 
 /**
- * Returns data for particular key
+ * returns data stored under the provided key
  * @param  {string} key 
  * @param  {boolean} nonVolatile - (optional)
  */
@@ -163,12 +182,13 @@ export async function GetItem(key, isNonVolatile = false) {
 }
 
 /**
- * Removes localstorage value
- * based on parameter, can remove particular key or whole volatile or nonVolatile storage from localStorage
- * @param  {boolean} clearLocalStorage - (optional)
- * @param  {boolean} clearNonVolatileStorage} - (optional)
+ * Removes storage value
+ * wipes out value being stored under volatile or nonvolatile category based on the parameter passed
+ * @param  {boolean} clearLocalStorage - (optional) - if true, will delete all the values under volatile
+ * @param  {boolean} clearNonVolatileStorage} - (optional) if true, will delete all the values under nonvolatile
  */
-export function RemoveItem({ key, clearVolatileStorage = true, clearNonVolatileStorage = false }) {
+export function RemoveItem({ clearVolatileStorage = true, clearNonVolatileStorage = false }) {
+    let key;
     if (clearVolatileStorage) {
         volatile = {};
         key = 'volatile';
@@ -176,6 +196,10 @@ export function RemoveItem({ key, clearVolatileStorage = true, clearNonVolatileS
     if (clearNonVolatileStorage) {
         nonVolatile = {};
         key = 'nonVolatile';
+    }
+
+    if (!key) {
+        return;
     }
     storageUtils({ method: 'removeItem', key });
 }
