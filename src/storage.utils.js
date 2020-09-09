@@ -153,7 +153,7 @@ function overrideStorage(store, isNonVolatile = false) {
  * @param  {string} key 
  * @param  {boolean} nonVolatile - (optional)
  */
-export async function GetItem(key, isNonVolatile = false) {
+export async function GetItemAsync(key, isNonVolatile = false) {
     if (!key) {
         return null;
     }
@@ -165,8 +165,35 @@ export async function GetItem(key, isNonVolatile = false) {
         const result = await setDefault();
     }
 
+    return GetItem(key, isNonVolatile);
+    // let storageVal;
+    // const store = (isNonVolatile ? nonVolatile : volatile) || {};
+    // storageVal = store[key];
+
+    // if (storageVal && typeof storageVal === 'object') {
+    //     const { timestamp, span, payload } = storageVal;
+    //     if (!span || IndividualValidator({ timestamp, span })) {
+    //         return payload;
+    //     } else {
+    //         delete store[key];
+    //         storageUtils({ method: 'setItem', key: isNonVolatile ? 'nonVolatile' : 'volatile', payload: JSON.stringify(store) });
+    //     }
+    // }
+    // return null;
+}
+
+/**
+ * Returns data for particular key
+ * @param  {string} key 
+ * @param  {boolean} nonVolatile - (optional)
+ */
+export function GetItem(key, isNonVolatile = false) {
+    if (!key) {
+        return null;
+    }
+
     let storageVal;
-    const store = (isNonVolatile ? nonVolatile : volatile) || {};
+    const store = isNonVolatile ? nonVolatile : volatile;
     storageVal = store[key];
 
     if (storageVal && typeof storageVal === 'object') {
@@ -178,6 +205,7 @@ export async function GetItem(key, isNonVolatile = false) {
             storageUtils({ method: 'setItem', key: isNonVolatile ? 'nonVolatile' : 'volatile', payload: JSON.stringify(store) });
         }
     }
+
     return null;
 }
 
