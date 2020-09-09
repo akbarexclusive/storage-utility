@@ -25,9 +25,9 @@ Target - Front End Projects
 
     const StorageTest = () => {
 
-        async testFunction() { 
+        testFunction() { 
             SetItem('testVar', { anything: 'any value' });
-            const storagevalue = await GetItem('testVar');
+            const storagevalue = GetItem('testVar');
             console.log(storagevalue);
         }
     }
@@ -85,8 +85,7 @@ Target - Front End Projects
     SetItem('temporayData', 1, { span: 1 }) // span will cause data to be flushed out after 1 minute
 ```
 
-
-* await GetItem('key', nonVolatile = false) - Returns value from the storage
+* GetItem('key', nonVolatile = false) - Returns value from the storage
 
 ```javascript
 
@@ -95,14 +94,28 @@ Target - Front End Projects
      * @param  {string} key 
      * @param  {boolean} nonVolatile - (optional)
      */
-    await GetItem(key, isNonVolatile = false)
+    GetItem(key, isNonVolatile = false)
 
     // sample api call
-    const storedValue = await GetItem('test');
-    const temporaryStoredValue = await GetItem('temporaryData');
+    const storedValue = GetItem('test');
+    const temporaryStoredValue = GetItem('temporaryData');
 ```
 
+* await GetItemAsync('key', nonVolatile = false) - Asynchronously returns value from the storage
 
+```javascript
+
+    /**
+     * returns data stored under the provided key
+     * @param  {string} key 
+     * @param  {boolean} nonVolatile - (optional)
+     */
+    await GetItemAsync(key, isNonVolatile = false)
+
+    // sample api call
+    const storedValue = await GetItemAsync('test');
+    const temporaryStoredValue = await GetItemAsync('temporaryData');
+```
 
 * RemoveItem({ clearVolatileStorage = true, clearNonVolatileStorage = false }) - Removes item from particular category. 
 
