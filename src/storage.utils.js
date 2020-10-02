@@ -3,10 +3,10 @@
  * Provides Methods for Storing data which is persistent
  * Currently supports two engines
  * (localStorage, React-Native's AsyncStorge)
- * 
- * to use this package for AsyncStorage one has to initialize 
- * configuration 
- * 
+ *
+ * to use this package for AsyncStorage one has to initialize
+ * configuration
+ *
  * Ex - InitializeStorageUtils({
  *      AsyncStorage, storeName, engine
  * })
@@ -24,19 +24,19 @@ let env = {
 
 let promise;
 
-// tries to initialize storage engine with default params, which prevents explicit calling the method for web usage where localstroage is attached to window 
+// tries to initialize storage engine with default params, which prevents explicit calling the method for web usage where localstroage is attached to window
 InitializeStorageUtils({});
 
 /**
  * sets up environment for storage engine
  * useful when using in react native (asyncStorage)
- * @param  {object} {engine - AsyncStorage object in case of react native. 
+ * @param  {object} {engine - AsyncStorage object in case of react native.
  * @param  {string} engineName} - name of engine is required to distinguish the platform and fetch data according
  * // since asyncstorage works asynchronously, hence its important to send engineName, which bydefault is localStorage
  * @param  {string} storeName{optional} - all the values would be stored under <storeName> keyword
  */
 export function InitializeStorageUtils({ engine, storeName, engineName }) {
-    const engineMethod = engine || ((window && window.localStorage) ? window.localStorage : false)
+    const engineMethod = engine || ((typeof window !== 'undefined' && window.localStorage) ? window.localStorage : false)
     if (!engineMethod) {
         return;
     }
@@ -95,7 +95,7 @@ function assingValuesToRespectiveStore(vol, nonVol) {
 
 /**
  * Setter in storage engine
- * Stores value against the keyword. 
+ * Stores value against the keyword.
  * SetItem also takes span(in minutes), which is timeduration after which value against the key will become stale and flushedout
  * it works as cookie which validates against the given time
  * @param  {string} key - key value against which value is stored and being fetched by passing same key
@@ -109,7 +109,7 @@ function assingValuesToRespectiveStore(vol, nonVol) {
  */
 export async function SetItem(key, payload, { timestamp = new Date().getTime(), span, isNonVolatile = false } = {}) {
 
-    // there might be a usecase when SetItem is being called while setDefault is still in progress 
+    // there might be a usecase when SetItem is being called while setDefault is still in progress
     // and fetching values from the asynstorage
     // promise is there, will wait for the function to be executed
     if (promise) {
@@ -137,7 +137,7 @@ export async function SetItem(key, payload, { timestamp = new Date().getTime(), 
 /**
  * Sets item in localStorage under 'volatile' keyword
  * @param  {string} key
- * @param  {any} payload 
+ * @param  {any} payload
  */
 function overrideStorage(store, isNonVolatile = false) {
     if (isNonVolatile) {
@@ -150,7 +150,7 @@ function overrideStorage(store, isNonVolatile = false) {
 
 /**
  * returns data stored under the provided key
- * @param  {string} key 
+ * @param  {string} key
  * @param  {boolean} nonVolatile - (optional)
  */
 export async function GetItemAsync(key, isNonVolatile = false) {
@@ -158,7 +158,7 @@ export async function GetItemAsync(key, isNonVolatile = false) {
         return null;
     }
 
-    // there might be a usecase when GetItem is being called while setDefault is still in progress 
+    // there might be a usecase when GetItem is being called while setDefault is still in progress
     // and fetching values from the asynstorage
     // promise will wait for the function to be executed
     if (promise) {
@@ -184,7 +184,7 @@ export async function GetItemAsync(key, isNonVolatile = false) {
 
 /**
  * Returns data for particular key
- * @param  {string} key 
+ * @param  {string} key
  * @param  {boolean} nonVolatile - (optional)
  */
 export function GetItem(key, isNonVolatile = false) {
@@ -255,13 +255,13 @@ export function resolveKey(key) {
  * @param  {boolean} isNonVolatile
  */
 function StorageValidator(object, isNonVolatile) {
-    // if value is not found in the storage, validation has become stale 
+    // if value is not found in the storage, validation has become stale
     // if (storageValidationValue) {
     if (GetItem('STORAGE_VALIDATION', false)) {
         return;
     }
 
-    // setting up new storage validation timestamp 
+    // setting up new storage validation timestamp
     SetItem('STORAGE_VALIDATION', new Date(), { span: 1 });
 
     const filteredStorage = {};
